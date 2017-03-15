@@ -1,4 +1,4 @@
-C_APPS=crypt generate_data generate_userkey
+C_APPS=crypt crypt_omp_simple crypt_omp_cu generate_data generate_userkey
 
 all: ${C_APPS}
 
