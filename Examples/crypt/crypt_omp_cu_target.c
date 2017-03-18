@@ -92,13 +92,23 @@ void doCrypt(int chunk, signed char *plain,
 static void h_encrypt_decrypt(signed char *plain, signed char *crypt, int *key,
                               int plainLength)
 {
-    int c;
-    int nChunks = plainLength / CHUNK_SIZE;
-    #pragma omp parallel for firstprivate(nChunks) private(c)
-    for (c = 0; c < nChunks; c++)
+  /* Create device buffers for a, b, c and transfer data from Host -> Device for a,b */
+  #pragma omp target data map(to:plain[0:plainLength-1]) map(from:crypt[0:plainLength-1])
+  {
+    /* Existing device buffers are used and no data is transferred here */
+    #pragma omp target
     {
-        doCrypt(c, plain, crypt, key);
+      
+      int c;
+      int nChunks = plainLength / CHUNK_SIZE;
+      #pragma omp parallel for firstprivate(nChunks) private(c)
+      for (c = 0; c < nChunks; c++)
+      {
+	doCrypt(c, plain, crypt, key);
+      }
+      
     }
+  } /* Device -> Host data transfer of buffer c is done here*/
 }
 
 /*
