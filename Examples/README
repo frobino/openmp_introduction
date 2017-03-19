@@ -1,0 +1,11 @@
+- When compiling with google-pprof on parallella, the -lprofiler has to be put at the end of the gcc command:
+  gcc -c -o ... file.c -lprofiler -lm
+
+- For some unknown reason, the crypt example does not work properly on parallella.
+  This can be due to the different architecture -> uint_t and similar types must be used to improve portability.
+
+- IN ADDITION, when offloading matrices to epiphany (see parallella exaples pi and gol), only embarassingly
+  parallel problems are solved, without the use of more complex constructs (omp parallel for, etc)
+
+- DUE TO THE PREVIOUS 2 CONSIDERATIONS, we have decided to explore other simpler application,
+  included in the Tmp folder, and try to implement everything as close as possible to the existing omp4 examples
