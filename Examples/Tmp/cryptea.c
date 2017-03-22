@@ -1,8 +1,9 @@
 // http://codereview.stackexchange.com/questions/2050/tiny-encryption-algorithm-tea-for-arbitrary-sized-data
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
-typedef unsigned long uint32_t;
 const uint32_t TEAKey[4] = {0x95a8882c, 0x9d2cc113, 0x815aa0cd, 0xa1c489f7};
 
 void encrypt (uint32_t* v, const uint32_t* k);
@@ -10,14 +11,14 @@ void decrypt (uint32_t* v, const uint32_t* k);
 
 void btea(uint32_t *v, int n, uint32_t const k[4]);
 
-void simpleencrypt(unsigned char * buffer);
-void simpledecrypt(unsigned char * buffer);
+void simpleencrypt(uint8_t * buffer);
+void simpledecrypt(uint8_t * buffer);
 
 int main(int argc, char **argv)
 {
   FILE *fpin, *fpout;
   int bytecount;
-  unsigned char buffer[9], bufferin[9], bufferout[9];
+  uint8_t buffer[9], bufferin[9], bufferout[9];
   int i;
 
   if(argc < 3)
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void simpleencrypt(unsigned char * buffer)
+void simpleencrypt(uint8_t * buffer)
 {
   uint32_t datablock[2];
 
@@ -94,17 +95,17 @@ void simpleencrypt(unsigned char * buffer)
 
   encrypt (datablock, TEAKey);
 
-  buffer[0] = (char) ((datablock[0] >> 24) & 0xFF);
-  buffer[1] = (char) ((datablock[0] >> 16) & 0xFF);
-  buffer[2] = (char) ((datablock[0] >> 8) & 0xFF);
-  buffer[3] = (char) ((datablock[0]) & 0xFF);
-  buffer[4] = (char) ((datablock[1] >> 24) & 0xFF);
-  buffer[5] = (char) ((datablock[1] >> 16) & 0xFF);
-  buffer[6] = (char) ((datablock[1] >> 8) & 0xFF);
-  buffer[7] = (char) ((datablock[1]) & 0xFF);
+  buffer[0] = (uint8_t) ((datablock[0] >> 24) & 0xFF);
+  buffer[1] = (uint8_t) ((datablock[0] >> 16) & 0xFF);
+  buffer[2] = (uint8_t) ((datablock[0] >> 8) & 0xFF);
+  buffer[3] = (uint8_t) ((datablock[0]) & 0xFF);
+  buffer[4] = (uint8_t) ((datablock[1] >> 24) & 0xFF);
+  buffer[5] = (uint8_t) ((datablock[1] >> 16) & 0xFF);
+  buffer[6] = (uint8_t) ((datablock[1] >> 8) & 0xFF);
+  buffer[7] = (uint8_t) ((datablock[1]) & 0xFF);
 }
 
-void simpledecrypt(unsigned char * buffer)
+void simpledecrypt(uint8_t * buffer)
 {
   uint32_t datablock[2];
 
@@ -113,14 +114,14 @@ void simpledecrypt(unsigned char * buffer)
 
   decrypt (datablock, TEAKey);
 
-  buffer[0] = (char) ((datablock[0] >> 24) & 0xFF);
-  buffer[1] = (char) ((datablock[0] >> 16) & 0xFF);
-  buffer[2] = (char) ((datablock[0] >> 8) & 0xFF);
-  buffer[3] = (char) ((datablock[0]) & 0xFF);
-  buffer[4] = (char) ((datablock[1] >> 24) & 0xFF);
-  buffer[5] = (char) ((datablock[1] >> 16) & 0xFF);
-  buffer[6] = (char) ((datablock[1] >> 8) & 0xFF);
-  buffer[7] = (char) ((datablock[1]) & 0xFF);
+  buffer[0] = (uint8_t) ((datablock[0] >> 24) & 0xFF);
+  buffer[1] = (uint8_t) ((datablock[0] >> 16) & 0xFF);
+  buffer[2] = (uint8_t) ((datablock[0] >> 8) & 0xFF);
+  buffer[3] = (uint8_t) ((datablock[0]) & 0xFF);
+  buffer[4] = (uint8_t) ((datablock[1] >> 24) & 0xFF);
+  buffer[5] = (uint8_t) ((datablock[1] >> 16) & 0xFF);
+  buffer[6] = (uint8_t) ((datablock[1] >> 8) & 0xFF);
+  buffer[7] = (uint8_t) ((datablock[1]) & 0xFF);
 }
 
 /* encrypt
@@ -174,7 +175,7 @@ void decrypt (uint32_t* v, const uint32_t* k) {
 
 void btea(uint32_t *v, int n, uint32_t const k[4]) {
   uint32_t y, z, sum;
-  unsigned p, rounds, e;
+  uint32_t p, rounds, e;
   if (n > 1) {          /* Coding Part */
     rounds = 6 + 52/n;
     sum = 0;
