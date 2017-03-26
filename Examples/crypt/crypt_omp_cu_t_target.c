@@ -93,45 +93,39 @@ static void h_encrypt_decrypt(int8_t *plain, int8_t *crypt, uint32_t *key,
                               uint32_t plainLength)
 {
 
-    
-    // #pragma omp parallel for firstprivate(nChunks) private(c)
-
-
-    /* Offload epiphany kernel. */
+    // frobino: uncomment the following (and respective closing brakets) to offload to target
+    /* Begin: Offload epiphany kernel. */
     /*
     #pragma omp target data map(plain, crypt, key)
     {
       #pragma omp target
       {
     */
+  
+    #pragma omp parallel shared(plain, crypt, key)
+    {
+      
+      uint32_t nChunks = plainLength / CHUNK_SIZE;
+      uint32_t n_threads = omp_get_num_threads();
+      uint32_t my_id = omp_get_thread_num();
 
-	
-        // #pragma omp parallel shared(plain, crypt, key)
-	#pragma omp parallel 
-	{
-	  
-	  uint32_t nChunks = plainLength / CHUNK_SIZE;
-	  uint32_t n_threads = omp_get_num_threads();
-	  uint32_t my_id = omp_get_thread_num();
+      int mystart,myend;
+      mystart = nChunks*my_id/n_threads;
+      myend = nChunks*(my_id+1)/n_threads;
 
-	  int mystart,myend;
-	  mystart = nChunks*my_id/n_threads;
-	  myend = nChunks*(my_id+1)/n_threads;
+      uint32_t c;
+      for (c = mystart; c <= myend; c++)
+      {
+        doCrypt(c, plain, crypt, key);
+      }
+    
+    }
 
-	  uint32_t c;
-	  for (c = mystart; c <= myend; c++)
-	  {
-	    doCrypt(c, plain, crypt, key);
-	  }
-
-	
-	}
-
-	/*
+    /*
       }
     }
-	*/
-
+    */
+    /* End: Offload epiphany kernel. */
 	
 }
 
@@ -281,24 +275,6 @@ static uint32_t *generateDecryptKey(int16_t *userkey)
 void readInputData(FILE *in, size_t textLen, int8_t **text,
                    int8_t **crypt)
 {
-  /*
-    CHECK(cudaMallocHost(text, textLen * sizeof(signed char)));
-    CHECK(cudaMallocHost(crypt, textLen * sizeof(signed char)));
-
-    if (fread(*text, sizeof(signed char), textLen, in) != textLen)
-    {
-        fprintf(stderr, "Failed reading text from input file\n");
-        exit(1);
-    }
-  */
-
-	/*
-    double **mat = (double **) malloc(sizeof(double *)*rows);
-    int i=0,j=0;
-    for(i=0; i<rows; i++)
-      Allocate array, store pointer
-        mat[i] = (double *) malloc(sizeof(double)*cols);
-    */
 
   *text = (int8_t*) malloc (textLen * sizeof(int8_t));
   if (text==NULL)
@@ -348,13 +324,9 @@ int main(int argc, char **argv)
     uint32_t *key;
     action a;
 
-    printf("long: %d, unsigned long: %d", sizeof(long), sizeof(unsigned long));
-    printf("char: %d, signed char: %d", sizeof(char), sizeof(signed char));
-
-    if (argc != 8)
+    if (argc != 5)
     {
-        printf("usage: %s <encrypt|decrypt> <file.in> <file.out> <key.file> "
-               "<threads-per-block> <ncpus> <cpu-percent>\n", argv[0]);
+        printf("usage: %s <encrypt|decrypt> <file.in> <file.out> <key.file>\n", argv[0]);
         return (1);
     }
 
@@ -401,12 +373,6 @@ int main(int argc, char **argv)
         return (1);
     }
 
-    uint32_t nThreadsPerBlock = atoi(argv[5]);
-    uint32_t ncpus = atoi(argv[6]);
-    // FIXME: cpu_percent NOT USED
-    float cpu_percent = atof(argv[7]);
-    omp_set_num_threads(ncpus);
-
     keyFileLength = getFileLength(keyfile);
 
     if (keyFileLength != sizeof(*userkey) * USERKEY_LENGTH)
@@ -452,21 +418,11 @@ int main(int argc, char **argv)
     readInputData(in, textLen, &text, &crypt);
     fclose(in);
 
-    uint32_t nDevices;
-
-    // If no devices are found, run all computation on the CPU using OpenMP.
-    // double overall_start = seconds();
     // frobino: google-pprof
-    ProfilerStart("crypt_omp_cu.prof");
+    ProfilerStart("crypt_omp_cu_t_target.prof");
     h_encrypt_decrypt(text, crypt, key, textLen);
     ProfilerFlush();
     ProfilerStop();
-    // double overall_finish = seconds();
-    // double overall_ms = 1000.0 * (overall_finish - overall_start);
-    /* printf("Processed %d bytes in %.3f ms on CPU ( %.4f KB/s )\n",
-	   textLen, overall_ms,
-   	   ((float)textLen / overall_ms) / 1024.0f);
-    */
     
     if (fwrite(crypt, sizeof(int8_t), textLen, out) != textLen)
     {

@@ -1,0 +1,13 @@
+HOWTO:
+- Make
+- generate key:
+  ./generate_userkey <output-file>
+- generate dummy data:
+  ./generate_data <output-file> <output-file-length-in-bytes>
+
+- encrypt:
+  ./crypt_omp_cu_t encrypt data128 data128en key 
+- decrypt:
+  ./crypt_omp_cu_t decrypt data128en data128de key 
+- check all went good:
+  diff data128 data128de

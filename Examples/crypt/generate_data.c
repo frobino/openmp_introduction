@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
     if (argc != 3)
     {
-        printf("usage: %s <output-file> <output-file-length>\n", argv[0]);
+        printf("usage: %s <output-file> <output-file-length-in-bytes>\n", argv[0]);
         return (1);
     }
 
