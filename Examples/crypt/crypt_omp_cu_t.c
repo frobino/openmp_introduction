@@ -28,6 +28,7 @@ uint32_t dkey[KEY_LENGTH];
  * chunks stored in plainList and outputs their encrypted/decrypted form to the
  * corresponding element in cryptList using the secret key provided.
  */
+#pragma omp declare target
 void doCrypt(uint32_t chunk, int8_t *plain,
 	     int8_t *crypt, uint32_t *key)
 {
@@ -88,12 +89,14 @@ void doCrypt(uint32_t chunk, int8_t *plain,
     crypt[chunk * CHUNK_SIZE + 7] = (int8_t) ((uint64_t)x4 >>
                                     BITS_PER_BYTE);
 }
+#pragma omp end declare target
 
 static void h_encrypt_decrypt(int8_t *plain, int8_t *crypt, uint32_t *key,
                               uint32_t plainLength)
 {
     uint32_t c;
     uint32_t nChunks = plainLength / CHUNK_SIZE;
+    #pragma omp target map (plain, key, crypt)
     #pragma omp parallel for
     for (c = 0; c < nChunks; c++)
     {
