@@ -94,7 +94,7 @@ static void h_encrypt_decrypt(int8_t *plain, int8_t *crypt, uint32_t *key,
 {
     uint32_t c;
     uint32_t nChunks = plainLength / CHUNK_SIZE;
-    #pragma omp parallel for firstprivate(nChunks) private(c)
+    #pragma omp parallel for
     for (c = 0; c < nChunks; c++)
     {
         doCrypt(c, plain, crypt, key);
@@ -263,7 +263,7 @@ void readInputData(FILE *in, size_t textLen, int8_t **text,
   }
 
   size_t result = fread(*text, sizeof(int8_t), textLen, in);
-  fprintf(stderr, "result %d , textLen %d \n", result, textLen);
+  fprintf(stderr, "result %zu , textLen %zu \n", result, textLen);
     
   if (result != textLen)
   {
@@ -349,7 +349,7 @@ int main(int argc, char **argv)
 
     if (keyFileLength != sizeof(*userkey) * USERKEY_LENGTH)
     {
-        fprintf(stderr, "Invalid user key file length %lu, must be %lu\n",
+        fprintf(stderr, "Invalid user key file length %zu, must be %zu\n",
                 keyFileLength, sizeof(*userkey) * USERKEY_LENGTH);
         return (1);
     }
@@ -382,7 +382,7 @@ int main(int argc, char **argv)
 
     if (textLen % CHUNK_SIZE != 0)
     {
-        fprintf(stderr, "Invalid input file length %lu, must be evenly "
+        fprintf(stderr, "Invalid input file length %zu, must be evenly "
                 "divisible by %d\n", textLen, CHUNK_SIZE);
         return (1);
     }
