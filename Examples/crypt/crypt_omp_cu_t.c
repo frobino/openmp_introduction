@@ -18,6 +18,13 @@
 // Length of the secret key, in bytes
 #define USERKEY_LENGTH  8
 #define BITS_PER_BYTE   8
+// Size of static arrays
+#define DATA_LENGTH 1024
+
+// Static arrays to test target directive
+int8_t plain_g[DATA_LENGTH];
+int8_t crypt_g[DATA_LENGTH];
+uint32_t key_g[KEY_LENGTH];
 
 typedef enum { ENCRYPT, DECRYPT } action;
 
@@ -96,12 +103,15 @@ static void h_encrypt_decrypt(int8_t *plain, int8_t *crypt, uint32_t *key,
 {
     uint32_t c;
     uint32_t nChunks = plainLength / CHUNK_SIZE;
-    #pragma omp target map (plain, key, crypt)
+    memcpy(plain_g, plain, DATA_LENGTH);
+    memcpy(key_g, key, KEY_LENGTH*sizeof(uint32_t));
+    #pragma omp target map (to: plain_g, key_g) map (from: crypt_g)
     #pragma omp parallel for
     for (c = 0; c < nChunks; c++)
     {
-        doCrypt(c, plain, crypt, key);
+        doCrypt(c, plain_g, crypt_g, key_g);
     }
+    memcpy(crypt, crypt_g, DATA_LENGTH);
 }
 
 /*
@@ -382,6 +392,12 @@ int main(int argc, char **argv)
     }
 
     textLen = getFileLength(in);
+
+    if (textLen > DATA_LENGTH)
+    {
+        fprintf(stderr, "Invalid input file length %zu, must be %d\n", textLen, DATA_LENGTH);
+        return (1);
+    }
 
     if (textLen % CHUNK_SIZE != 0)
     {
