@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATA=data1K
+DATA=data8M
 
 ./crypt encrypt ${DATA} ${DATA}en key
 ./crypt decrypt ${DATA}en ${DATA}de key

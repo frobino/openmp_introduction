@@ -19,7 +19,7 @@
 #define USERKEY_LENGTH  8
 #define BITS_PER_BYTE   8
 // Size of static arrays
-#define DATA_LENGTH 1024
+#define DATA_LENGTH (1024 * 1024 * 8) // 8MB
 
 // Static arrays to test target directive
 int8_t plain_g[DATA_LENGTH];
