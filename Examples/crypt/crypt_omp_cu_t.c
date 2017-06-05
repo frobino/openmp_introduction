@@ -103,14 +103,21 @@ static void h_encrypt_decrypt(int8_t *plain, int8_t *crypt, uint32_t *key,
 {
     uint32_t c;
     uint32_t nChunks = plainLength / CHUNK_SIZE;
+
+    // Due to a limitation of the ompicc compiler,
+    // the parallel region works only on static arrays
     memcpy(plain_g, plain, DATA_LENGTH);
     memcpy(key_g, key, KEY_LENGTH*sizeof(uint32_t));
+
     #pragma omp target map (to: plain_g, key_g) map (from: crypt_g)
     #pragma omp parallel for
     for (c = 0; c < nChunks; c++)
     {
         doCrypt(c, plain_g, crypt_g, key_g);
     }
+
+    // Due to a limitation of the ompicc compiler,
+    // the parallel region works only on static arrays
     memcpy(crypt, crypt_g, DATA_LENGTH);
 }
 
